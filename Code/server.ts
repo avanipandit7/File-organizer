@@ -1,23 +1,25 @@
 import express, { Request, Response } from 'express';
+import cors from 'cors'; // 1. Added cors import
 import PDFDocument from 'pdfkit';
 import { createCanvas } from '@napi-rs/canvas';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
+app.use(cors()); // 2. Added cors middleware
 app.use(express.json());
 
 // Serve static output files
 app.use('/outputs', express.static(path.join(__dirname, '../')));
 
-// 1. Health check endpoint
+// Health check endpoint
 app.get('/', (req: Request, res: Response) => {
   res.send('🚀 File Organizer & Generator API is live!');
 });
 
-// 2. Generate PDF, CSV, and Image from HTTP POST
+// Generate PDF, CSV, and Image from HTTP POST
 app.post('/api/generate', (req: Request, res: Response) => {
   const { text } = req.body;
 
@@ -60,14 +62,14 @@ app.post('/api/generate', (req: Request, res: Response) => {
     return res.status(200).json({
       message: 'Files updated successfully!',
       text,
-      pdfUrl: `http://localhost:${PORT}/sample-doc.pdf`,
-      imageUrl: `http://localhost:${PORT}/output.png`,
+      pdfUrl: `http://127.0.0.1:${PORT}/sample-doc.pdf`,
+      imageUrl: `http://127.0.0.1:${PORT}/output.png`,
     });
   } catch (err) {
     return res.status(500).json({ error: 'Failed to process files.', details: err });
   }
 });
 
-app.listen(PORT, '127.0.0.1', () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`⚡ Server running locally at http://127.0.0.1:${PORT}`);
 });

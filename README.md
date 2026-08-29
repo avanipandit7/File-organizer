@@ -4,7 +4,7 @@ A lightweight, powerful Node.js & TypeScript backend utility built to organize l
 
 ---
 
-## 🚀 Key Features
+## 🚀 Key Features :
 
 * 📁 **Smart File Sorting:** Scans and organizes files (`.png`, `.pdf`, `.zip`, `.csv`) into designated subfolders.
 * 📄 **Terminal-to-PDF Engine:** Dynamically renders text entries directly into a structured PDF document via CLI arguments.
@@ -13,7 +13,7 @@ A lightweight, powerful Node.js & TypeScript backend utility built to organize l
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Tech Stack :
 
 * **Language:** TypeScript
 * **Runtime:** Node.js (v22+)

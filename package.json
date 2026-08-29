@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@napi-rs/canvas": "^1.0.8",
+    "pdfkit": "^0.20.1"
+  },
+  "devDependencies": {
+    "@types/pdfkit": "^0.17.6"
+  }
+}

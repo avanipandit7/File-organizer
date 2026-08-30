@@ -2,10 +2,14 @@
   "dependencies": {
     "@napi-rs/canvas": "^1.0.8",
     "@types/express": "^5.0.6",
+    "cors": "^2.8.6",
     "express": "^5.2.1",
+    "mysql2": "^3.24.2",
     "pdfkit": "^0.20.1"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/node": "^26.4.0",
     "@types/pdfkit": "^0.17.6"
   }
 }

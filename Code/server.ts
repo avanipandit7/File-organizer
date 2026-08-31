@@ -30,6 +30,22 @@ if (!fs.existsSync(exportsDir)) {
   fs.mkdirSync(exportsDir, { recursive: true });
 }
 
+function createRequestedTextFile(prompt: string, timestamp: number): string | null {
+  if (!/create\s+(?:a\s+)?text\s+file/i.test(prompt)) return null;
+
+  const filenameMatch = prompt.match(
+    /create\s+(?:a\s+)?text\s+file(?:\s+(?:called|named)\s+["']?([^"']+?\.(?:txt|text))["']?)?/i
+  );
+  const contentMatch = prompt.match(/add\s+["']?([\s\S]+?)["']?\s+to\s+(?:it|the file)\s*$/i);
+  const requestedName = filenameMatch?.[1] || `generated-${timestamp}.txt`;
+  const safeName = path.basename(requestedName).replace(/[^a-zA-Z0-9._-]/g, '_');
+  const content = contentMatch?.[1]?.trim() || '';
+  const filename = safeName.toLowerCase().endsWith('.txt') ? safeName : `${safeName}.txt`;
+
+  fs.writeFileSync(path.join(exportsDir, filename), content, 'utf8');
+  return filename;
+}
+
 // 2. CREATE / GENERATE FILE ROUTE
 app.post('/api/generate', async (req: Request, res: Response) => {
   const { text } = req.body;
@@ -39,6 +55,7 @@ app.post('/api/generate', async (req: Request, res: Response) => {
     const timestamp = Date.now();
     const pdfFilename = `doc-${timestamp}.pdf`;
     const imageFilename = `img-${timestamp}.png`;
+    const textFilename = createRequestedTextFile(text, timestamp);
 
     const pdfPath = path.join(exportsDir, pdfFilename);
     const imagePath = path.join(exportsDir, imageFilename);
@@ -73,6 +90,9 @@ app.post('/api/generate', async (req: Request, res: Response) => {
       text,
       pdfUrl: `/files/${pdfFilename}`,
       imageUrl: `/files/${imageFilename}`,
+      textFile: textFilename
+        ? { filename: textFilename, url: `/files/${textFilename}` }
+        : null,
     });
   } catch (err) {
     console.error(err);

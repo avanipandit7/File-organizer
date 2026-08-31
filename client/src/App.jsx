@@ -4,6 +4,8 @@ export default function App() {
   const [text, setText] = useState('');
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [generated, setGenerated] = useState(null);
+  const [error, setError] = useState('');
 
   const fetchLogs = async () => {
     try {
@@ -16,12 +18,23 @@ export default function App() {
   };
 
   useEffect(() => {
-    fetchLogs();
+    const loadLogs = async () => {
+      try {
+        const res = await fetch('/api/logs');
+        const data = await res.json();
+        if (Array.isArray(data)) setLogs(data);
+      } catch (err) {
+        console.error('Error fetching logs:', err);
+      }
+    };
+
+    loadLogs();
   }, []);
 
   const handleGenerate = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
     try {
       const res = await fetch('/api/generate', {
@@ -30,12 +43,17 @@ export default function App() {
         body: JSON.stringify({ text }),
       });
 
+      const data = await res.json();
       if (res.ok) {
+        setGenerated(data);
         setText('');
-        fetchLogs();
+        await fetchLogs();
+      } else {
+        setError(data.error || 'The prompt could not be processed.');
       }
     } catch (err) {
       console.error(err);
+      setError('The server could not be reached.');
     } finally {
       setLoading(false);
     }
@@ -51,29 +69,55 @@ export default function App() {
   };
 
   return (
-    <div style={{ maxWidth: '800px', margin: '2rem auto', fontFamily: 'sans-serif' }}>
-      <h2>File Generator & SQL Logger</h2>
+    <main className="app-shell">
+      <header className="page-header">
+        <p className="eyebrow">LOCAL FILE WORKSHOP</p>
+        <h1>Make something real<br /><span>from a sentence.</span></h1>
+        <p className="intro">Describe the file you want. The server creates it, stores the run, and brings the result back here.</p>
+      </header>
 
-      <form onSubmit={handleGenerate} style={{ marginBottom: '2rem' }}>
+      <form onSubmit={handleGenerate} className="prompt-form">
         <input
           type="text"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Enter prompt text..."
+          placeholder="Create text file and add Hello world to it"
           required
-          style={{ padding: '8px', width: '70%', marginRight: '10px' }}
         />
-        <button type="submit" disabled={loading} style={{ padding: '8px 16px' }}>
-          {loading ? 'Generating...' : 'Generate Assets'}
+        <button type="submit" disabled={loading}>
+          {loading ? 'Creating...' : 'Create files'}
         </button>
       </form>
+      {error && <p className="error-message" role="alert">{error}</p>}
 
-      <h3>Generated Files History</h3>
-      <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse' }}>
+      {generated && (
+        <section className="result-panel" aria-live="polite">
+          <div>
+            <p className="eyebrow">JUST CREATED</p>
+            <h2>{generated.textFile ? generated.textFile.filename : 'Export bundle ready'}</h2>
+            <p>{generated.textFile ? 'Your text file is ready to open or download.' : 'Your PDF and image exports are ready.'}</p>
+          </div>
+          <div className="result-links">
+            {generated.textFile && <a href={generated.textFile.url} download>Text file</a>}
+            <a href={generated.pdfUrl} target="_blank" rel="noreferrer">PDF</a>
+            <a href={generated.imageUrl} target="_blank" rel="noreferrer">PNG</a>
+          </div>
+        </section>
+      )}
+
+      <section className="history-section">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">ACTIVITY</p>
+            <h2>Generated history</h2>
+          </div>
+          <span>{logs.length} {logs.length === 1 ? 'run' : 'runs'}</span>
+        </div>
+      <div className="table-wrap"><table>
         <thead>
           <tr>
             <th>ID</th>
-            <th>Text Entry</th>
+            <th>Prompt</th>
             <th>Downloads</th>
             <th>Date</th>
             <th>Action</th>
@@ -84,9 +128,9 @@ export default function App() {
             <tr key={item.id}>
               <td>{item.id}</td>
               <td>{item.input_text}</td>
-              <td>
-                <a href={item.pdf_path ? `/files/${item.pdf_path}` : '#'} target="_blank" rel="noreferrer">PDF</a> | {' '}
-                <a href={item.image_path ? `/files/${item.image_path}` : '#'} target="_blank" rel="noreferrer">PNG</a>
+              <td className="downloads">
+                {item.pdf_path && <a href={`/files/${item.pdf_path}`} target="_blank" rel="noreferrer">PDF</a>}
+                {item.image_path && <a href={`/files/${item.image_path}`} target="_blank" rel="noreferrer">PNG</a>}
               </td>
               <td>{new Date(item.created_at).toLocaleString()}</td>
               <td>
@@ -96,6 +140,7 @@ export default function App() {
           ))}
         </tbody>
       </table>
-    </div>
+      </div></section>
+    </main>
   );
 }
